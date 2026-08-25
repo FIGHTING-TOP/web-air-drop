@@ -1,0 +1,15 @@
+{
+  "name": "web-air-drop",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @airdrop/shared build && pnpm -r --parallel --filter @airdrop/server --filter @airdrop/web --filter @airdrop/shared dev",
+    "build": "pnpm --filter @airdrop/shared build && pnpm --filter @airdrop/server build && pnpm --filter @airdrop/web build",
+    "dev:server": "pnpm --filter @airdrop/server dev",
+    "dev:web": "pnpm --filter @airdrop/web dev",
+    "postinstall": "pnpm --filter @airdrop/shared build"
+  }
+}
