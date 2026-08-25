@@ -1,0 +1,112 @@
+.roomCode {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  letter-spacing: 0.14em;
+}
+
+.you {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+}
+
+.qrBlock {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  color: var(--text);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 800px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.peers ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.peer {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #556;
+}
+
+.dotOn {
+  composes: dot;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(62, 207, 142, 0.2);
+}
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
+}
+
+.feedDragover {
+  outline: 2px dashed var(--accent);
+  outline-offset: -6px;
+}
+
+.feedList {
+  flex: 1;
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+  max-height: 420px;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.composer {
+  margin-top: 1rem;
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.progressList {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
+.progress {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.barFill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}

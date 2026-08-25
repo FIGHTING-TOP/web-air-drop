@@ -1,6 +1,7 @@
 import { Landing } from '../components/Landing';
 import { Room } from '../components/Room';
 import { useAirdrop } from '../hooks/useAirdrop';
+import ui from '../styles/ui.module.css';
 
 function getInitialRoom(): string | undefined {
   const params = new URLSearchParams(window.location.search);
@@ -13,7 +14,7 @@ export function AirdropPage() {
 
   if (!airdrop.room) {
     return (
-      <div className="shell">
+      <div className={ui.shell}>
         <Landing
           initialRoomId={initialRoom}
           connected={airdrop.connected}
@@ -26,7 +27,7 @@ export function AirdropPage() {
   }
 
   return (
-    <div className="shell">
+    <div className={ui.shell}>
       <Room
         roomId={airdrop.room.roomId}
         name={airdrop.room.name}

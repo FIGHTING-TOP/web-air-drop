@@ -1,0 +1,10 @@
+.landing {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 460px;
+  margin: 8vh auto 0;
+}
+
+.brand {
+  margin-bottom: 0.5rem;
+}

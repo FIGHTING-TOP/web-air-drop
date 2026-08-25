@@ -1,0 +1,51 @@
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 800px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+}
+
+.feedDragover {
+  outline: 2px dashed var(--accent);
+  outline-offset: -6px;
+}
+
+.feedList {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+  margin-top: 1rem;
+  max-height: none;
+}
+
+.remoteSection {
+  margin-top: 1rem;
+}
+
+.remoteTextBubble {
+  margin-top: 0.75rem;
+}
+
+.emptyRemote {
+  margin-top: 0.75rem;
+}
+
+.editorActions {
+  margin-top: 0.75rem;
+}
+
+.uploadActions {
+  margin-top: 0.75rem;
+}

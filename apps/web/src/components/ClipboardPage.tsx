@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   generateClipboardId,
   isValidClipboardId,
@@ -7,6 +7,8 @@ import {
   type ClipboardPayload,
 } from '@airdrop/shared';
 import { formatBytes, formatTime } from '../lib/utils';
+import ui from '../styles/ui.module.css';
+import styles from './ClipboardPage.module.css';
 
 export function ClipboardPage() {
   const { id: rawId } = useParams<{ id: string }>();
@@ -19,8 +21,8 @@ export function ClipboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const dropRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setDraftId(id);
@@ -158,7 +160,7 @@ export function ClipboardPage() {
 
   function onDrop(e: DragEvent) {
     e.preventDefault();
-    dropRef.current?.classList.remove('dragover');
+    setDragOver(false);
     if (e.dataTransfer.files?.length) void uploadFiles(e.dataTransfer.files);
   }
 
@@ -167,72 +169,67 @@ export function ClipboardPage() {
   }
 
   return (
-    <div className="shell clipboard">
-      <header className="room__header">
+    <div className={ui.shell}>
+      <header className={ui.pageHeader}>
         <div>
-          <p className="landing__eyebrow">服务端存储</p>
-          <h1 className="landing__title" style={{ fontSize: '2rem' }}>
-            网络剪切板
-          </h1>
-          <p className="landing__sub">同 ID 的设备共享文本与文件；保存后对端点「刷新」即可看到。</p>
+          <p className={ui.eyebrow}>服务端存储</p>
+          <h1 className={ui.titleSm}>网络剪切板</h1>
+          <p className={ui.sub}>同 ID 的设备共享文本与文件；保存后对端点「刷新」即可看到。</p>
         </div>
-        <div className="room__share">
-          <Link to="/" className="button-link secondary">
-            AirDrop
-          </Link>
-          <button type="button" className="secondary" onClick={() => void copyLink()}>
+        <div className={ui.pageShare}>
+          <button type="button" className={ui.btnSecondary} onClick={() => void copyLink()}>
             {copied ? '已复制' : '复制链接'}
           </button>
-          <button type="button" className="ghost" disabled={busy} onClick={() => void clearAll()}>
+          <button type="button" className={ui.btnGhost} disabled={busy} onClick={() => void clearAll()}>
             清空全部
           </button>
         </div>
       </header>
 
-      <form className="panel" onSubmit={applyId}>
-        <label className="field">
+      <form className={ui.panel} onSubmit={applyId}>
+        <label className={ui.field}>
           <span>剪切板 ID（可改 URL 或在此切换）</span>
-          <div className="composer__row">
+          <div className={ui.composerRow}>
             <input
-              className="mono"
+              className={ui.mono}
               value={draftId}
               onChange={(e) => setDraftId(e.target.value.toUpperCase())}
               maxLength={16}
               spellCheck={false}
             />
-            <button type="submit" className="secondary">
+            <button type="submit" className={ui.btnSecondary}>
               切换
             </button>
             <button
               type="button"
-              className="secondary"
+              className={ui.btnSecondary}
               onClick={() => navigate(`/clipboard/${generateClipboardId()}`)}
             >
               新 ID
             </button>
           </div>
         </label>
-        <p className="mono small break muted">{shareUrl}</p>
+        <p className={`${ui.mono} ${ui.small} ${ui.break} ${ui.muted}`}>{shareUrl}</p>
       </form>
 
-      <div className="clipboard__grid">
-        <section className="panel">
-          <h2>写入文本</h2>
+      <div className={styles.grid}>
+        <section className={ui.panel}>
+          <h2 className={ui.sectionTitle}>写入文本</h2>
           <textarea
             value={localText}
             onChange={(e) => setLocalText(e.target.value)}
             placeholder="在此输入要同步的文本，点保存后对端可见…"
             rows={8}
           />
-          <div className="composer__actions" style={{ marginTop: '0.75rem' }}>
-            <button type="button" className="secondary" onClick={loadRemoteIntoEditor} disabled={!remote?.text}>
+          <div className={`${ui.composerActions} ${styles.editorActions}`}>
+            <button type="button" className={ui.btnSecondary} onClick={loadRemoteIntoEditor} disabled={!remote?.text}>
               载入远端文本
             </button>
-            <div className="actions">
-              <button type="button" className="ghost" disabled={busy} onClick={() => void clearText()}>
+            <div className={ui.actions}>
+              <button type="button" className={ui.btnGhost} disabled={busy} onClick={() => void clearText()}>
                 清除远端文本
               </button>
-              <button type="button" disabled={busy} onClick={() => void saveText()}>
+              <button type="button" className={ui.btn} disabled={busy} onClick={() => void saveText()}>
                 保存文本
               </button>
             </div>
@@ -240,19 +237,18 @@ export function ClipboardPage() {
         </section>
 
         <section
-          className="panel feed"
-          ref={dropRef}
+          className={`${ui.panel} ${styles.feed} ${dragOver ? styles.feedDragover : ''}`}
           onDragOver={(e) => {
             e.preventDefault();
-            dropRef.current?.classList.add('dragover');
+            setDragOver(true);
           }}
-          onDragLeave={() => dropRef.current?.classList.remove('dragover')}
+          onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
         >
-          <h2>上传文件</h2>
-          <p className="muted small">拖拽到此处，或选择文件（单文件 ≤ 20MB）</p>
-          <div className="actions" style={{ marginTop: '0.75rem' }}>
-            <button type="button" className="secondary" disabled={busy} onClick={() => fileRef.current?.click()}>
+          <h2 className={ui.sectionTitle}>上传文件</h2>
+          <p className={`${ui.muted} ${ui.small}`}>拖拽到此处，或选择文件（单文件 ≤ 20MB）</p>
+          <div className={`${ui.actions} ${styles.uploadActions}`}>
+            <button type="button" className={ui.btnSecondary} disabled={busy} onClick={() => fileRef.current?.click()}>
               选择文件
             </button>
             <input
@@ -266,61 +262,58 @@ export function ClipboardPage() {
         </section>
       </div>
 
-      <section className="panel" style={{ marginTop: '1rem' }}>
-        <div className="composer__row">
-          <h2 style={{ margin: 0 }}>远端内容</h2>
-          <div className="actions">
+      <section className={`${ui.panel} ${styles.remoteSection}`}>
+        <div className={ui.composerRow}>
+          <h2 className={ui.sectionTitleFlush}>远端内容</h2>
+          <div className={ui.actions}>
             {remote?.updatedAt ? (
-              <span className="muted small">更新于 {formatTime(remote.updatedAt)}</span>
+              <span className={`${ui.muted} ${ui.small}`}>更新于 {formatTime(remote.updatedAt)}</span>
             ) : (
-              <span className="muted small">尚无内容</span>
+              <span className={`${ui.muted} ${ui.small}`}>尚无内容</span>
             )}
-            <button type="button" className="secondary" disabled={busy} onClick={() => void fetchRemote()}>
+            <button type="button" className={ui.btnSecondary} disabled={busy} onClick={() => void fetchRemote()}>
               刷新
             </button>
           </div>
         </div>
 
         {remote?.text ? (
-          <article className="bubble" style={{ marginTop: '0.75rem' }}>
-            <header>
+          <article className={`${ui.bubble} ${styles.remoteTextBubble}`}>
+            <header className={ui.bubbleHeader}>
               <strong>文本</strong>
-              <button type="button" className="ghost" style={{ padding: '0.2rem 0.6rem' }} onClick={() => void clearText()}>
+              <button type="button" className={ui.btnGhostCompact} onClick={() => void clearText()}>
                 删除
               </button>
             </header>
-            <p className="bubble__text">{remote.text}</p>
+            <p className={ui.bubbleText}>{remote.text}</p>
           </article>
         ) : (
-          <p className="muted" style={{ marginTop: '0.75rem' }}>
-            暂无远端文本
-          </p>
+          <p className={`${ui.muted} ${styles.emptyRemote}`}>暂无远端文本</p>
         )}
 
-        <div className="feed__list" style={{ marginTop: '1rem', maxHeight: 'none' }}>
+        <div className={styles.feedList}>
           {(remote?.files ?? []).map((f) => {
             const url = `/api/clipboard/${id}/files/${f.id}`;
             const isImage = f.mime.startsWith('image/');
             const isVideo = f.mime.startsWith('video/');
             const isAudio = f.mime.startsWith('audio/');
             return (
-              <article key={f.id} className="bubble">
-                <header>
+              <article key={f.id} className={ui.bubble}>
+                <header className={ui.bubbleHeader}>
                   <strong>{f.name}</strong>
-                  <span className="muted small">{formatBytes(f.size)}</span>
+                  <span className={`${ui.muted} ${ui.small}`}>{formatBytes(f.size)}</span>
                 </header>
-                <div className="file-card">
+                <div className={ui.fileCard}>
                   {isImage && <img src={url} alt={f.name} />}
                   {isVideo && <video src={url} controls playsInline />}
                   {isAudio && <audio src={url} controls />}
-                  <div className="file-meta">
-                    <a className="link" href={url} download={f.name}>
+                  <div className={ui.fileMeta}>
+                    <a className={ui.link} href={url} download={f.name}>
                       下载
                     </a>
                     <button
                       type="button"
-                      className="ghost"
-                      style={{ padding: '0.2rem 0.6rem' }}
+                      className={ui.btnGhostCompact}
                       disabled={busy}
                       onClick={() => void deleteFile(f.id)}
                     >
@@ -331,12 +324,12 @@ export function ClipboardPage() {
               </article>
             );
           })}
-          {remote && remote.files.length === 0 && <p className="muted">暂无文件</p>}
+          {remote && remote.files.length === 0 && <p className={ui.muted}>暂无文件</p>}
         </div>
       </section>
 
       {error && (
-        <p className="error" role="alert">
+        <p className={ui.error} role="alert">
           {error}
         </p>
       )}
