@@ -6,7 +6,7 @@ import ui from '../styles/ui.module.css';
 export function ClipboardRedirect() {
   const navigate = useNavigate();
   useEffect(() => {
-    navigate(`/clipboard/${generateClipboardId()}`, { replace: true });
+    navigate(`/${generateClipboardId()}`, { replace: true });
   }, [navigate]);
   return (
     <div className={ui.shell}>

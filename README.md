@@ -6,7 +6,7 @@
 
 - **Monorepo**: pnpm workspaces
 - **前端**: React 19 + Vite + TypeScript
-- **后端**: NestJS + Socket.IO（信令）+ TypeScript
+- **后端**: NestJS + Fastify + Socket.IO（信令）+ TypeScript
 - **共享**: `@airdrop/shared`（事件名、协议类型、房间码）
 
 ## 目录
@@ -24,12 +24,14 @@ staticStorage   网络剪切板文件存储（本地，不入库）
 
 ```bash
 pnpm install
-pnpm dev
+pnpm dev      # 开发：web(5173) + server(3000)
+pnpm start    # 生产：打包 web/server 后由 Nest 托管 SPA，访问 http://localhost:3000
 ```
 
-- 前端: http://localhost:5173
-- 网络剪切板: http://localhost:5173/clipboard （自动生成 ID）
-- 后端: http://localhost:3000
+- 开发前端: http://localhost:5173
+- 开发后端 / 生产一体: http://localhost:3000
+- 网络剪切板: `/`（自动生成 ID，进入 `/{id}`）
+- AirDrop: `/airdrop`
 - 健康检查: `GET /health`
 - 创建房间（REST）: `POST /api/rooms` → `{ "roomId": "XXXXXX" }`
 - ICE 配置: `GET /api/ice`
@@ -38,7 +40,7 @@ pnpm dev
 
 ### 网络剪切板
 
-服务端持久化共享板：打开 `/clipboard` 得到 ID，另一端打开同一 `/clipboard/{id}` 即可看到已保存的文本与文件。
+服务端持久化共享板：打开 `/` 得到 ID，另一端打开同一 `/{id}` 即可看到已保存的文本与文件。
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -57,12 +59,14 @@ pnpm dev
 | 变量 | 说明 | 默认 |
 |------|------|------|
 | `PORT` | 服务端口 | `3000` |
-| `CORS_ORIGIN` | 允许的前端来源，逗号分隔 | `http://localhost:5173` |
+| `CORS_ORIGIN` | 允许的前端来源，逗号分隔；不设则反射请求 Origin | 反射 |
+| `WEB_DIST` | 前端静态资源目录 | `apps/web/dist` |
 | `STUN_URLS` | STUN 地址，逗号分隔 | `stun:stun.l.google.com:19302` |
 | `TURN_URLS` | 可选 TURN，逗号分隔 | 空 |
 | `TURN_USERNAME` | TURN 用户名 | 空 |
 | `TURN_CREDENTIAL` | TURN 密码 | 空 |
 | `STORAGE_DIR` | 网络剪切板存储根目录 | 仓库根下 `staticStorage` |
+| `FILE_MAX_BYTES` | 剪切板单文件大小上限（字节） | `104857600`（100MB） |
 
 跨公网/复杂 NAT 时建议配置自建 coturn，否则部分网络无法建立 P2P。
 

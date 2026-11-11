@@ -8,14 +8,16 @@ import {
   normalizeClipboardId,
   type ClipboardFileMeta,
   type ClipboardPayload,
+  type ClipboardSummary,
 } from '@airdrop/shared';
 import { createReadStream, existsSync } from 'fs';
-import { mkdir, readFile, rm, writeFile } from 'fs/promises';
+import { mkdir, readdir, readFile, rm, writeFile } from 'fs/promises';
 import * as path from 'path';
 import { randomBytes } from 'crypto';
+import type { UploadedFile } from './uploaded-file';
 
 const MAX_TEXT_BYTES = 100 * 1024;
-const MAX_FILE_BYTES = 20 * 1024 * 1024;
+const MAX_FILE_BYTES = Number(process.env.FILE_MAX_BYTES ?? 100 * 1024 * 1024);
 
 @Injectable()
 export class ClipboardService {
@@ -67,6 +69,50 @@ export class ClipboardService {
     };
   }
 
+  async listAll(): Promise<ClipboardSummary[]> {
+    if (!existsSync(this.root)) return [];
+
+    const entries = await readdir(this.root, { withFileTypes: true });
+    const summaries: ClipboardSummary[] = [];
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      if (!isValidClipboardId(entry.name)) continue;
+
+      const payload = await this.get(entry.name);
+      if (!payload.text && payload.files.length === 0 && payload.updatedAt === 0) {
+        // Empty placeholder dirs without meta — skip
+        if (!existsSync(this.metaPath(entry.name))) continue;
+      }
+
+      const text = payload.text ?? '';
+      summaries.push({
+        id: payload.id,
+        hasText: text.length > 0,
+        textPreview: text.slice(0, 80),
+        fileCount: payload.files.length,
+        totalSize: payload.files.reduce((sum, f) => sum + (f.size || 0), 0),
+        updatedAt: payload.updatedAt,
+      });
+    }
+
+    summaries.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    return summaries;
+  }
+
+  async batchDelete(rawIds: string[]): Promise<{ deleted: string[] }> {
+    if (!Array.isArray(rawIds) || rawIds.length === 0) {
+      throw new BadRequestException('ids are required');
+    }
+    const deleted: string[] = [];
+    for (const raw of rawIds) {
+      const id = this.assertId(raw);
+      await this.clearAll(id);
+      deleted.push(id);
+    }
+    return { deleted };
+  }
+
   private async ensureDirs(id: string) {
     await mkdir(this.filesDir(id), { recursive: true });
   }
@@ -109,7 +155,7 @@ export class ClipboardService {
 
   async addFiles(
     rawId: string,
-    files: Express.Multer.File[],
+    files: UploadedFile[],
   ): Promise<ClipboardPayload> {
     const id = this.assertId(rawId);
     if (!files?.length) {
@@ -117,7 +163,9 @@ export class ClipboardService {
     }
     for (const f of files) {
       if (f.size > MAX_FILE_BYTES) {
-        throw new BadRequestException(`File ${f.originalname} exceeds 20MB limit`);
+        throw new BadRequestException(
+          `File ${f.originalname} exceeds ${Math.round(MAX_FILE_BYTES / (1024 * 1024))}MB limit`,
+        );
       }
     }
 

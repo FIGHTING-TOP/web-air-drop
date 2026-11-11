@@ -6,18 +6,27 @@ import {
   Param,
   Post,
   Put,
+  Req,
   Res,
-  UploadedFiles,
-  UseInterceptors,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import type { Response } from 'express';
-import { memoryStorage } from 'multer';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ClipboardService } from './clipboard.service';
+import type { UploadedFile } from './uploaded-file';
 
 @Controller('api/clipboard')
 export class ClipboardController {
   constructor(private readonly clipboard: ClipboardService) {}
+
+  /** List all clipboard IDs (must be before :id). */
+  @Get()
+  listAll() {
+    return this.clipboard.listAll();
+  }
+
+  @Post('batch-delete')
+  batchDelete(@Body() body: { ids?: string[] }) {
+    return this.clipboard.batchDelete(body?.ids ?? []);
+  }
 
   @Get(':id')
   get(@Param('id') id: string) {
@@ -35,32 +44,38 @@ export class ClipboardController {
   }
 
   @Post(':id/files')
-  @UseInterceptors(
-    FilesInterceptor('files', 20, {
-      storage: memoryStorage(),
-      limits: { fileSize: 20 * 1024 * 1024 },
-    }),
-  )
-  upload(
-    @Param('id') id: string,
-    @UploadedFiles() files: Express.Multer.File[],
-  ) {
-    return this.clipboard.addFiles(id, files ?? []);
+  async upload(@Param('id') id: string, @Req() req: FastifyRequest) {
+    const uploaded: UploadedFile[] = [];
+
+    const parts = req.files();
+    for await (const part of parts) {
+      if (part.type !== 'file') continue;
+      const buffer = await part.toBuffer();
+      uploaded.push({
+        originalname: part.filename || 'file',
+        mimetype: part.mimetype || 'application/octet-stream',
+        size: buffer.byteLength,
+        buffer,
+      });
+    }
+
+    return this.clipboard.addFiles(id, uploaded);
   }
 
   @Get(':id/files/:fileId')
   async download(
     @Param('id') id: string,
     @Param('fileId') fileId: string,
-    @Res() res: Response,
+    @Res() res: FastifyReply,
   ) {
     const { stream, meta } = await this.clipboard.getFileStream(id, fileId);
-    res.setHeader('Content-Type', meta.mime);
-    res.setHeader(
-      'Content-Disposition',
-      `inline; filename*=UTF-8''${encodeURIComponent(meta.name)}`,
-    );
-    stream.pipe(res);
+    return res
+      .header('Content-Type', meta.mime)
+      .header(
+        'Content-Disposition',
+        `inline; filename*=UTF-8''${encodeURIComponent(meta.name)}`,
+      )
+      .send(stream);
   }
 
   @Delete(':id/files/:fileId')

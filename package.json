@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "pnpm --filter @airdrop/shared build && pnpm -r --parallel --filter @airdrop/server --filter @airdrop/web --filter @airdrop/shared dev",
     "build": "pnpm --filter @airdrop/shared build && pnpm --filter @airdrop/server build && pnpm --filter @airdrop/web build",
+    "start": "pnpm --filter @airdrop/shared build && pnpm --filter @airdrop/web build && pnpm --filter @airdrop/server build && pnpm --filter @airdrop/server start",
     "dev:server": "pnpm --filter @airdrop/server dev",
     "dev:web": "pnpm --filter @airdrop/web dev",
     "postinstall": "pnpm --filter @airdrop/shared build"

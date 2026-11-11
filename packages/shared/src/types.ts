@@ -123,3 +123,12 @@ export type ClipboardPayload = {
   files: ClipboardFileMeta[];
   updatedAt: number;
 };
+
+export type ClipboardSummary = {
+  id: string;
+  hasText: boolean;
+  textPreview: string;
+  fileCount: number;
+  totalSize: number;
+  updatedAt: number;
+};

@@ -170,6 +170,7 @@ export function useAirdrop() {
     setRoom(next);
     setPeers(result.peers);
     const url = new URL(window.location.href);
+    url.pathname = '/airdrop';
     url.searchParams.set('room', result.roomId);
     window.history.replaceState({}, '', url);
   }, []);
@@ -198,6 +199,7 @@ export function useAirdrop() {
     setRoom(next);
     setPeers(result.peers);
     const url = new URL(window.location.href);
+    url.pathname = '/airdrop';
     url.searchParams.set('room', result.roomId);
     window.history.replaceState({}, '', url);
 
@@ -224,6 +226,7 @@ export function useAirdrop() {
     setItems([]);
     setProgress([]);
     const url = new URL(window.location.href);
+    url.pathname = '/airdrop';
     url.searchParams.delete('room');
     window.history.replaceState({}, '', url);
   }, [peers]);

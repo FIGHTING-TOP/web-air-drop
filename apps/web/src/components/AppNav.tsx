@@ -1,11 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import styles from './AppNav.module.css';
 
+function isClipboardPath(pathname: string): boolean {
+  if (pathname === '/') return true;
+  if (pathname === '/airdrop' || pathname === '/manage' || pathname.startsWith('/manage/')) {
+    return false;
+  }
+  return /^\/[a-zA-Z0-9]+$/.test(pathname);
+}
 
 export function AppNav() {
   const [open, setOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
+  const location = useLocation();
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -36,20 +44,27 @@ export function AppNav() {
           <NavLink
             to="/"
             end
-            className={({ isActive }) => (isActive ? styles.linkActive : styles.link)}
-          >
-            AirDrop
-          </NavLink>
-          <NavLink
-            to="/clipboard"
-            className={({ isActive }) => (isActive ? styles.linkActive : styles.link)}
+            className={() => (isClipboardPath(location.pathname) ? styles.linkActive : styles.link)}
+            onClick={() => setOpen(false)}
           >
             剪切板
           </NavLink>
+          <NavLink
+            to="/airdrop"
+            className={({ isActive }) => (isActive ? styles.linkActive : styles.link)}
+            onClick={() => setOpen(false)}
+          >
+            AirDrop
+          </NavLink>
+          {/* <NavLink
+            to="/manage"
+            className={({ isActive }) => (isActive ? styles.linkActive : styles.link)}
+            onClick={() => setOpen(false)}
+          >
+            管理
+          </NavLink> */}
         </div>
-
       </div>
-
     </header>
   );
 }

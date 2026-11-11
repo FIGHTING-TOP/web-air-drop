@@ -44,7 +44,9 @@ export function Room({
 
   const shareUrl = useMemo(() => {
     const url = new URL(window.location.href);
+    url.pathname = '/airdrop';
     url.searchParams.set('room', roomId);
+    url.hash = '';
     return url.toString();
   }, [roomId]);
 

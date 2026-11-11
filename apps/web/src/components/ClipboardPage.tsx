@@ -18,11 +18,24 @@ export function ClipboardPage() {
   const [draftId, setDraftId] = useState(id);
   const [localText, setLocalText] = useState('');
   const [remote, setRemote] = useState<ClipboardPayload | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = useCallback((message: string) => {
+    setToast(message);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2800);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     setDraftId(id);
@@ -30,22 +43,23 @@ export function ClipboardPage() {
 
   useEffect(() => {
     if (!isValidClipboardId(id)) {
-      navigate(`/clipboard/${generateClipboardId()}`, { replace: true });
+      navigate(`/${generateClipboardId()}`, { replace: true });
     }
   }, [id, navigate]);
+
+  const apiBase = useMemo(() => `/api/clipboard/${encodeURIComponent(id)}`, [id]);
 
   const fetchRemote = useCallback(async () => {
     if (!isValidClipboardId(id)) return;
     try {
-      const res = await fetch(`/api/clipboard/${id}`);
+      const res = await fetch(apiBase);
       if (!res.ok) throw new Error(await res.text());
       const data = (await res.json()) as ClipboardPayload;
       setRemote(data);
-      setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '加载失败');
+      showToast(e instanceof Error ? e.message : '加载失败');
     }
-  }, [id]);
+  }, [apiBase, id, showToast]);
 
   useEffect(() => {
     void fetchRemote();
@@ -53,7 +67,7 @@ export function ClipboardPage() {
 
   const shareUrl = useMemo(() => {
     const url = new URL(window.location.href);
-    url.pathname = `/clipboard/${id}`;
+    url.pathname = `/${encodeURIComponent(id)}`;
     url.search = '';
     url.hash = '';
     return url.toString();
@@ -69,17 +83,16 @@ export function ClipboardPage() {
     e.preventDefault();
     const next = normalizeClipboardId(draftId);
     if (!isValidClipboardId(next)) {
-      setError('ID 需为 4–16 位字母数字');
+      showToast('剪切板 ID 只能包含字母和数字');
       return;
     }
-    navigate(`/clipboard/${next}`);
+    navigate(`/${encodeURIComponent(next)}`);
   }
 
   async function saveText() {
     setBusy(true);
-    setError(null);
     try {
-      const res = await fetch(`/api/clipboard/${id}/text`, {
+      const res = await fetch(`${apiBase}/text`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: localText }),
@@ -88,7 +101,7 @@ export function ClipboardPage() {
       const data = (await res.json()) as ClipboardPayload;
       setRemote(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '保存失败');
+      showToast(e instanceof Error ? e.message : '保存失败');
     } finally {
       setBusy(false);
     }
@@ -97,13 +110,13 @@ export function ClipboardPage() {
   async function clearText() {
     setBusy(true);
     try {
-      const res = await fetch(`/api/clipboard/${id}/text`, { method: 'DELETE' });
+      const res = await fetch(`${apiBase}/text`, { method: 'DELETE' });
       if (!res.ok) throw new Error(await res.text());
       const data = (await res.json()) as ClipboardPayload;
       setRemote(data);
       setLocalText('');
     } catch (e) {
-      setError(e instanceof Error ? e.message : '清除失败');
+      showToast(e instanceof Error ? e.message : '清除失败');
     } finally {
       setBusy(false);
     }
@@ -113,16 +126,15 @@ export function ClipboardPage() {
     const files = Array.from(list);
     if (!files.length) return;
     setBusy(true);
-    setError(null);
     try {
       const form = new FormData();
       for (const f of files) form.append('files', f);
-      const res = await fetch(`/api/clipboard/${id}/files`, { method: 'POST', body: form });
+      const res = await fetch(`${apiBase}/files`, { method: 'POST', body: form });
       if (!res.ok) throw new Error(await res.text());
       const data = (await res.json()) as ClipboardPayload;
       setRemote(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '上传失败');
+      showToast(e instanceof Error ? e.message : '上传失败');
     } finally {
       setBusy(false);
       if (fileRef.current) fileRef.current.value = '';
@@ -132,12 +144,12 @@ export function ClipboardPage() {
   async function deleteFile(fileId: string) {
     setBusy(true);
     try {
-      const res = await fetch(`/api/clipboard/${id}/files/${fileId}`, { method: 'DELETE' });
+      const res = await fetch(`${apiBase}/files/${fileId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error(await res.text());
       const data = (await res.json()) as ClipboardPayload;
       setRemote(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '删除失败');
+      showToast(e instanceof Error ? e.message : '删除失败');
     } finally {
       setBusy(false);
     }
@@ -147,12 +159,12 @@ export function ClipboardPage() {
     if (!confirm('确定清空该剪切板的全部内容？')) return;
     setBusy(true);
     try {
-      const res = await fetch(`/api/clipboard/${id}`, { method: 'DELETE' });
+      const res = await fetch(apiBase, { method: 'DELETE' });
       if (!res.ok) throw new Error(await res.text());
       setRemote({ id, text: '', files: [], updatedAt: 0 });
       setLocalText('');
     } catch (e) {
-      setError(e instanceof Error ? e.message : '清空失败');
+      showToast(e instanceof Error ? e.message : '清空失败');
     } finally {
       setBusy(false);
     }
@@ -170,6 +182,12 @@ export function ClipboardPage() {
 
   return (
     <div className={ui.shell}>
+      {toast && (
+        <div className={styles.toast} role="status" aria-live="polite">
+          {toast}
+        </div>
+      )}
+
       <header className={ui.pageHeader}>
         <div>
           <p className={ui.eyebrow}>服务端存储</p>
@@ -188,13 +206,13 @@ export function ClipboardPage() {
 
       <form className={ui.panel} onSubmit={applyId}>
         <label className={ui.field}>
-          <span>剪切板 ID（可改 URL 或在此切换）</span>
+          <span>剪切板 ID（字母 / 数字，区分大小写）</span>
           <div className={ui.composerRow}>
             <input
               className={ui.mono}
               value={draftId}
-              onChange={(e) => setDraftId(e.target.value.toUpperCase())}
-              maxLength={16}
+              onChange={(e) => setDraftId(e.target.value)}
+              placeholder="例如：A1234 或 myClip"
               spellCheck={false}
             />
             <button type="submit" className={ui.btnSecondary}>
@@ -203,7 +221,7 @@ export function ClipboardPage() {
             <button
               type="button"
               className={ui.btnSecondary}
-              onClick={() => navigate(`/clipboard/${generateClipboardId()}`)}
+              onClick={() => navigate(`/${generateClipboardId()}`)}
             >
               新 ID
             </button>
@@ -246,7 +264,7 @@ export function ClipboardPage() {
           onDrop={onDrop}
         >
           <h2 className={ui.sectionTitle}>上传文件</h2>
-          <p className={`${ui.muted} ${ui.small}`}>拖拽到此处，或选择文件（单文件 ≤ 20MB）</p>
+          <p className={`${ui.muted} ${ui.small}`}>拖拽到此处，或选择文件（单文件默认 ≤ 100MB）</p>
           <div className={`${ui.actions} ${styles.uploadActions}`}>
             <button type="button" className={ui.btnSecondary} disabled={busy} onClick={() => fileRef.current?.click()}>
               选择文件
@@ -293,7 +311,7 @@ export function ClipboardPage() {
 
         <div className={styles.feedList}>
           {(remote?.files ?? []).map((f) => {
-            const url = `/api/clipboard/${id}/files/${f.id}`;
+            const url = `${apiBase}/files/${f.id}`;
             const isImage = f.mime.startsWith('image/');
             const isVideo = f.mime.startsWith('video/');
             const isAudio = f.mime.startsWith('audio/');
@@ -327,12 +345,6 @@ export function ClipboardPage() {
           {remote && remote.files.length === 0 && <p className={ui.muted}>暂无文件</p>}
         </div>
       </section>
-
-      {error && (
-        <p className={ui.error} role="alert">
-          {error}
-        </p>
-      )}
     </div>
   );
 }
