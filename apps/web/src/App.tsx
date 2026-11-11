@@ -12,7 +12,7 @@ export default function App() {
       <AppNav />
       <Routes>
         <Route path="/airdrop" element={<AirdropPage />} />
-        <Route path="/manage" element={<ManageListPage />} />
+        <Route path="/manage/list" element={<ManageListPage />} />
         <Route path="/manage/:id" element={<ManageDetailPage />} />
         <Route path="/" element={<ClipboardRedirect />} />
         <Route path="/:id" element={<ClipboardPage />} />

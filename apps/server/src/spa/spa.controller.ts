@@ -17,8 +17,8 @@ export class SpaController {
     return this.sendIndex(res);
   }
 
-  @Get('manage')
-  manageRoot(@Res() res: FastifyReply) {
+  @Get('manage/list')
+  manageList(@Res() res: FastifyReply) {
     return this.sendIndex(res);
   }
 

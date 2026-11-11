@@ -4,7 +4,7 @@ import styles from './AppNav.module.css';
 
 function isClipboardPath(pathname: string): boolean {
   if (pathname === '/') return true;
-  if (pathname === '/airdrop' || pathname === '/manage' || pathname.startsWith('/manage/')) {
+  if (pathname === '/airdrop' || pathname.startsWith('/manage/')) {
     return false;
   }
   return /^\/[a-zA-Z0-9]+$/.test(pathname);
@@ -57,7 +57,7 @@ export function AppNav() {
             AirDrop
           </NavLink>
           {/* <NavLink
-            to="/manage"
+            to="/manage/list"
             className={({ isActive }) => (isActive ? styles.linkActive : styles.link)}
             onClick={() => setOpen(false)}
           >

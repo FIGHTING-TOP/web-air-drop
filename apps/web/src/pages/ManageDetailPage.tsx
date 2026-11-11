@@ -30,7 +30,7 @@ export function ManageDetailPage() {
 
   useEffect(() => {
     if (!isValidClipboardId(id)) {
-      navigate('/manage', { replace: true });
+      navigate('/manage/list', { replace: true });
     }
   }, [id, navigate]);
 
@@ -58,7 +58,7 @@ export function ManageDetailPage() {
       if (!res.ok) throw new Error(await res.text());
       const data = (await res.json()) as ClipboardPayload;
       if (!data.text && data.files.length === 0 && data.updatedAt === 0) {
-        navigate('/manage', { replace: true });
+        navigate('/manage/list', { replace: true });
         return;
       }
       setRemote(data);
@@ -77,7 +77,7 @@ export function ManageDetailPage() {
       if (!res.ok) throw new Error(await res.text());
       const data = (await res.json()) as ClipboardPayload;
       if (!data.text && data.files.length === 0 && data.updatedAt === 0) {
-        navigate('/manage', { replace: true });
+        navigate('/manage/list', { replace: true });
         return;
       }
       setRemote(data);
@@ -94,7 +94,7 @@ export function ManageDetailPage() {
     try {
       const res = await fetch(apiBase, { method: 'DELETE' });
       if (!res.ok) throw new Error(await res.text());
-      navigate('/manage', { replace: true });
+      navigate('/manage/list', { replace: true });
     } catch (e) {
       showToast(e instanceof Error ? e.message : '删除失败');
       setBusy(false);
@@ -118,7 +118,7 @@ export function ManageDetailPage() {
           </p>
         </div>
         <div className={ui.pageShare}>
-          <Link to="/manage" className={ui.btnSecondary}>
+          <Link to="/manage/list" className={ui.btnSecondary}>
             返回列表
           </Link>
           <Link to={`/${encodeURIComponent(id)}`} className={ui.btnSecondary}>
