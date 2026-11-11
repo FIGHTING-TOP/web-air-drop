@@ -2,6 +2,8 @@
 
 基于 WebRTC DataChannel 的浏览器端 AirDrop：多设备加入同一房间后，互相直传文本、图片、音视频等文件。信令与房间由 NestJS 提供，文件内容不经服务器中转。
 
+**License:** [MIT](./LICENSE)
+
 ## 技术栈
 
 - **Monorepo**: pnpm workspaces
@@ -92,3 +94,7 @@ pnpm dev:web      # 仅前端
 2. 发送图片可预览；音视频可播放并可下载。
 3. 第三台加入后，与前两台均可互传。
 4. 服务端仅见信令日志，无文件二进制落盘。
+
+## 开源协议
+
+本项目采用 [MIT License](./LICENSE) 开源。
